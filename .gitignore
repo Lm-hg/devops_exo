@@ -14,3 +14,9 @@ infra/terraform/.terraform.lock.hcl
 infra/terraform/terraform.tfstate
 infra/terraform/terraform.tfstate.*
 infra/terraform/crash.log
+infra/terraform/environments/**/.terraform/
+infra/terraform/environments/**/.terraform.lock.hcl
+infra/terraform/environments/**/terraform.tfstate
+infra/terraform/environments/**/terraform.tfstate.*
+infra/terraform/environments/**/crash.log
+infra/terraform/environments/**/secret.auto.tfvars
