@@ -7,3 +7,10 @@
 06-docker-avance.md
 07-kubernetes-deploy.md
 08-helm-charts.md
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.*
+infra/terraform/crash.log
