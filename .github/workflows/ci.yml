@@ -1,0 +1,82 @@
+name: CI/CD Pipeline
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Instal dependencies
+
+        run: npm ci
+
+      - name: Run tests and capture output
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.txt
+
+      - name: Upload test artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-node-${{ matrix.node-version }}
+          path: test-output.txt
+
+  build:
+    name: Builf Docker image
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: devops-app:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  security:
+    name: Security scan
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan application files
+
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          format: table
+
+  deploy:
+    name: Deploy (simulated)
+    needs: [build, security]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - run: echo "Deploying version ${{ github.sha }}"
